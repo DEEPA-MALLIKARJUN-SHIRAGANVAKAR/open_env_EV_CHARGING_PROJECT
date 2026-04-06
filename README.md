@@ -1,3 +1,13 @@
+---
+title: EV Charging Scheduler
+emoji: ⚡
+colorFrom: blue
+colorTo: green
+sdk: gradio
+app_file: app.py
+python_version: "3.10"
+---
+
 # ⚡ EV Charging Scheduler - Production OpenEnv Environment
 
 A sophisticated, production-ready OpenEnv environment for optimizing electric vehicle (EV) charging scheduling across distributed charging infrastructure.
