@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ev_charging_env/ ./ev_charging_env/
 COPY inference.py .
 COPY app.py .
+COPY main.py .
 COPY ui.py .
 COPY benchmarks.py .
 COPY documentation.py .
@@ -38,5 +39,5 @@ USER appuser
 # For HuggingFace Spaces, expose port 7860
 EXPOSE 7860
 
-# Default command: launch Gradio UI for HF Spaces
-CMD ["python", "app.py"]
+# Default command: launch API server for OpenEnv validation
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]

@@ -3,8 +3,8 @@ title: EV Charging Scheduler
 emoji: ⚡
 colorFrom: blue
 colorTo: green
-sdk: gradio
-app_file: app.py
+app_port: 7860
+sdk: docker
 python_version: "3.10"
 ---
 
