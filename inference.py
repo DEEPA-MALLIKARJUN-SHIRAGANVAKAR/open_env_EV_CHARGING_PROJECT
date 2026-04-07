@@ -25,6 +25,12 @@ from ev_charging_env import (
 )
 
 
+def emit_block(tag: str, **fields: Any) -> None:
+    """Print validator-friendly structured output to stdout."""
+    ordered = " ".join(f"{key}={fields[key]}" for key in fields)
+    print(f"[{tag}] {ordered}".rstrip(), flush=True)
+
+
 class InferenceRunner:
     """Run EV Charging environment with OpenAI API-based agent."""
 
@@ -81,6 +87,8 @@ class InferenceRunner:
         total_reward = 0.0
         step_count = 0
         api_call_count = 0
+
+        emit_block("START", task=task_name, max_steps=task.config.max_steps)
         
         # Initial prompt to set up the task context
         initial_prompt = f"""You are an expert AI agent optimizing electric vehicle charging schedules.
@@ -182,6 +190,13 @@ Choose next action (respond with JSON only):"""
                           f"Grid={next_obs['grid']['current_load']:.1%}, "
                           f"Charged={charged}/{len(next_obs['vehicles'])}, "
                           f"API calls={api_call_count}")
+                emit_block(
+                    "STEP",
+                    task=task_name,
+                    step=step_count,
+                    reward=round(result.reward, 4),
+                    done=result.done,
+                )
 
                 if result.done or result.info.get("done", False):
                     print(f"  Task completed at step {step+1}")
@@ -205,6 +220,13 @@ Choose next action (respond with JSON only):"""
                     result = task.step(fallback_action)
                     step_count += 1
                     print(f"  Using fallback action: {fallback_action}")
+                    emit_block(
+                        "STEP",
+                        task=task_name,
+                        step=step_count,
+                        reward=round(result.reward, 4),
+                        done=result.done,
+                    )
                 except Exception as fallback_error:
                     print(f"  Fallback action also failed: {fallback_error}")
                     break
@@ -236,6 +258,12 @@ Choose next action (respond with JSON only):"""
         print(f"  Total Cost: ${results['total_cost']:.2f}")
         print(f"  API Calls: {api_call_count}")
         print(f"  Runtime: {elapsed_time:.1f}s")
+        emit_block(
+            "END",
+            task=task_name,
+            score=round(results["score"], 4),
+            steps=results["steps_taken"],
+        )
 
         return results
 
@@ -371,12 +399,12 @@ def output_results(task_results: List[Dict[str, Any]], output_file: str = None):
                 task_name = result.get('task_name', 'unknown')
                 if "error" not in result:
                     score = result.get('score', 0.0)
-                    status = "✅"
+                    status = "[OK]"
                     total_score += score
                     valid_tasks += 1
                 else:
                     score = 0.0
-                    status = "❌"
+                    status = "[ERR]"
 
                 print(f"{status} {task_name.upper():8s}: {score:.4f}")
                 scores[task_name] = round(score, 4)
@@ -390,30 +418,30 @@ def output_results(task_results: List[Dict[str, Any]], output_file: str = None):
     if valid_tasks > 0:
         avg_score = round(total_score / valid_tasks, 4)
         scores["average"] = avg_score
-        print(f"\n📊 {'AVERAGE':8s}: {avg_score:.4f}")
+        print(f"\nAVG {'AVERAGE':8s}: {avg_score:.4f}")
     else:
         scores["average"] = 0.0
-        print(f"\n❌ {'AVERAGE':8s}: 0.0000 (no valid tasks)")
+        print(f"\nERR {'AVERAGE':8s}: 0.0000 (no valid tasks)")
 
     print("\n" + "="*70)
     print("SCORING INFORMATION")
     print("="*70)
-    print("• Scores are normalized to [0.0, 1.0]")
-    print("• 1.0 = Perfect performance on task")
-    print("• 0.0 = No progress made")
-    print("• Average = Mean across all valid tasks")
+    print("- Scores are normalized to [0.0, 1.0]")
+    print("- 1.0 = Perfect performance on task")
+    print("- 0.0 = No progress made")
+    print("- Average = Mean across all valid tasks")
 
     # JSON output
     if output_file:
         try:
             with open(output_file, 'w') as f:
                 json.dump(scores, f, indent=2)
-            print(f"\n💾 Results saved to: {output_file}")
+            print(f"\nResults saved to: {output_file}")
         except Exception as e:
-            print(f"\n❌ Error saving to {output_file}: {e}")
+            print(f"\nError saving to {output_file}: {e}")
 
     # Always print JSON to stdout for easy parsing
-    print(f"\n📄 JSON Output: {json.dumps(scores, indent=None)}")
+    print(f"\nJSON Output: {json.dumps(scores, indent=None)}")
 
 
 def run_baseline_agents() -> Dict[str, Dict[str, float]]:
@@ -445,12 +473,20 @@ def run_baseline_agents() -> Dict[str, Dict[str, float]]:
             obs = task.reset()
             step_count = 0
             max_steps = task.config.max_steps
+            emit_block("START", task=f"{task_name}_{agent_name}", max_steps=max_steps)
 
             while step_count < max_steps and obs is not None:
                 action = agent.get_action(obs)
                 step_result = task.step(action)
                 obs = step_result.observation
                 step_count += 1
+                emit_block(
+                    "STEP",
+                    task=f"{task_name}_{agent_name}",
+                    step=step_count,
+                    reward=round(step_result.reward, 4),
+                    done=step_result.done,
+                )
 
                 if step_result.done or step_result.info.get("done", False):
                     break
@@ -464,6 +500,12 @@ def run_baseline_agents() -> Dict[str, Dict[str, float]]:
 
             print(f"  {agent_name:15s}: {grade.score:.3f} "
                   f"(charged {grade.vehicles_charged}, cost ${grade.total_cost:.2f})")
+            emit_block(
+                "END",
+                task=f"{task_name}_{agent_name}",
+                score=round(grade.score, 4),
+                steps=step_count,
+            )
 
     return results
 
@@ -489,7 +531,7 @@ def main():
 
     # Check for API key
     if not os.getenv("OPENAI_API_KEY"):
-        print("\n❌ ERROR: OPENAI_API_KEY environment variable not set.")
+        print("\nERROR: OPENAI_API_KEY environment variable not set.")
         print("Please set it with: export OPENAI_API_KEY=sk-...")
         print("\nFalling back to baseline agent comparison...")
 
@@ -498,10 +540,10 @@ def main():
         return
 
     # Run with OpenAI API
-    print(f"\n🤖 Using OpenAI API with model: {args.model or os.getenv('MODEL_NAME', 'gpt-4')}")
-    print(f"🌱 Reproducibility seed: {args.seed}")
-    print(f"⏱️  Max runtime per task: {args.max_runtime} minutes")
-    print(f"📊 Estimated total runtime: {args.max_runtime * 3} minutes\n")
+    print(f"\nUsing OpenAI API with model: {args.model or os.getenv('MODEL_NAME', 'gpt-4')}")
+    print(f"Reproducibility seed: {args.seed}")
+    print(f"Max runtime per task: {args.max_runtime} minutes")
+    print(f"Estimated total runtime: {args.max_runtime * 3} minutes\n")
 
     try:
         runner = InferenceRunner(model=args.model, seed=args.seed)
@@ -516,12 +558,12 @@ def main():
 
         for task_name, task_func in tasks:
             try:
-                print(f"\n🚀 Starting {task_name.upper()} task...")
+                print(f"\nStarting {task_name.upper()} task...")
                 task = task_func()
                 result = runner.run_task(task_name, task, args.max_runtime)
                 task_results.append(result)
             except Exception as e:
-                print(f"❌ Error running {task_name} task: {e}")
+                print(f"Error running {task_name} task: {e}")
                 task_results.append({
                     "task_name": task_name,
                     "score": 0.0,
@@ -534,7 +576,7 @@ def main():
         output_results(task_results, args.output_json)
 
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        print(f"\nFatal error: {e}")
         sys.exit(1)
 
 
