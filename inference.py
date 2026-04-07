@@ -31,21 +31,25 @@ def emit_block(tag: str, **fields: Any) -> None:
     print(f"[{tag}] {ordered}".rstrip(), flush=True)
 
 
+def get_api_credentials() -> tuple[str | None, str | None]:
+    """Return proxy-compatible API credentials from environment."""
+    api_key = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+    api_base = os.getenv("API_BASE_URL")
+    return api_key, api_base
+
+
 class InferenceRunner:
     """Run EV Charging environment with OpenAI API-based agent."""
 
     def __init__(self, model: str = None, seed: int = None):
         """Initialize with OpenAI client and environment variables support."""
-        # Environment variable support
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.api_key, api_base = get_api_credentials()
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+            raise ValueError("API_KEY or OPENAI_API_KEY environment variable not set")
 
         # Model configuration with environment variable support
         self.model = model or os.getenv("MODEL_NAME", "gpt-4")
 
-        # API base URL support for custom endpoints
-        api_base = os.getenv("API_BASE_URL")
         if api_base:
             self.client = OpenAI(api_key=self.api_key, base_url=api_base)
         else:
@@ -530,9 +534,10 @@ def main():
     print("="*70)
 
     # Check for API key
-    if not os.getenv("OPENAI_API_KEY"):
-        print("\nERROR: OPENAI_API_KEY environment variable not set.")
-        print("Please set it with: export OPENAI_API_KEY=sk-...")
+    api_key, api_base = get_api_credentials()
+    if not api_key:
+        print("\nERROR: API_KEY or OPENAI_API_KEY environment variable not set.")
+        print("Please set API_KEY and API_BASE_URL, or OPENAI_API_KEY for local runs.")
         print("\nFalling back to baseline agent comparison...")
 
         baseline_results = run_baseline_agents()
@@ -541,6 +546,8 @@ def main():
 
     # Run with OpenAI API
     print(f"\nUsing OpenAI API with model: {args.model or os.getenv('MODEL_NAME', 'gpt-4')}")
+    if api_base:
+        print(f"Using API_BASE_URL: {api_base}")
     print(f"Reproducibility seed: {args.seed}")
     print(f"Max runtime per task: {args.max_runtime} minutes")
     print(f"Estimated total runtime: {args.max_runtime * 3} minutes\n")

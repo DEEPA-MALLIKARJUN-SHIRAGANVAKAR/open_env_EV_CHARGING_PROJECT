@@ -14,12 +14,16 @@ class LLMEvaluator:
     """LLM-based evaluation for nuanced task assessment."""
     
     def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.api_key = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+        self.api_base = os.getenv("API_BASE_URL")
         self.client = None
         if self.api_key:
             try:
                 from openai import OpenAI
-                self.client = OpenAI(api_key=self.api_key)
+                if self.api_base:
+                    self.client = OpenAI(api_key=self.api_key, base_url=self.api_base)
+                else:
+                    self.client = OpenAI(api_key=self.api_key)
             except ImportError:
                 pass
     
