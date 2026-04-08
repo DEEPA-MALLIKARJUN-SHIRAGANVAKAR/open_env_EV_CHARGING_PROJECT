@@ -199,9 +199,10 @@ parameters:
 tasks:
   - id: "task_1"
     name: "easy_charging"
+    grader_id: "grader_task_1"
     entrypoint: ev_charging_env.tasks:create_easy_task
-    grader: ev_charging_env.tasks:grade_easy_task
-    grader_entrypoint: ev_charging_env.tasks:grade_easy_task
+    grader: ev_charging_env.tasks:grade_easy_score
+    grader_entrypoint: ev_charging_env.tasks:grade_easy_score
     difficulty: "easy"
     description: |
       Basic charging task with few vehicles and no dynamic constraints.
@@ -219,9 +220,10 @@ tasks:
   
   - id: "task_2"
     name: "medium_charging"
+    grader_id: "grader_task_2"
     entrypoint: ev_charging_env.tasks:create_medium_task
-    grader: ev_charging_env.tasks:grade_medium_task
-    grader_entrypoint: ev_charging_env.tasks:grade_medium_task
+    grader: ev_charging_env.tasks:grade_medium_score
+    grader_entrypoint: ev_charging_env.tasks:grade_medium_score
     difficulty: "medium"
     description: |
       Intermediate task with dynamic pricing and moderate constraints.
@@ -239,9 +241,10 @@ tasks:
   
   - id: "task_3"
     name: "hard_charging"
+    grader_id: "grader_task_3"
     entrypoint: ev_charging_env.tasks:create_hard_task
-    grader: ev_charging_env.tasks:grade_hard_task
-    grader_entrypoint: ev_charging_env.tasks:grade_hard_task
+    grader: ev_charging_env.tasks:grade_hard_score
+    grader_entrypoint: ev_charging_env.tasks:grade_hard_score
     difficulty: "hard"
     description: |
       Complex task with all constraints and stochastic arrivals.
@@ -257,6 +260,23 @@ tasks:
       random_agent: 0.28
       greedy_agent: 0.55
       priority_agent: 0.78
+
+graders:
+  - id: "grader_task_1"
+    task_id: "task_1"
+    type: "programmatic"
+    entrypoint: ev_charging_env.tasks:grade_easy_score
+    score_range: [0.0, 1.0]
+  - id: "grader_task_2"
+    task_id: "task_2"
+    type: "programmatic"
+    entrypoint: ev_charging_env.tasks:grade_medium_score
+    score_range: [0.0, 1.0]
+  - id: "grader_task_3"
+    task_id: "task_3"
+    type: "programmatic"
+    entrypoint: ev_charging_env.tasks:grade_hard_score
+    score_range: [0.0, 1.0]
 
 # API interface
 api:

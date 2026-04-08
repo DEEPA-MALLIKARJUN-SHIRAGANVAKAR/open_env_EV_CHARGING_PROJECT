@@ -436,18 +436,42 @@ def _resolve_task_context(*args, **kwargs) -> tuple[EVChargingEnvironment, Obser
 
 
 def grade_easy_task(*args, **kwargs) -> TaskResult:
+    if not args and not kwargs:
+        task = create_easy_task()
+        task.reset()
+        return TaskGrader.grade_easy(task.env, task.env.state(), use_llm=False)
     env, final_obs = _resolve_task_context(*args, **kwargs)
     return TaskGrader.grade_easy(env, final_obs, use_llm=False)
 
 
 def grade_medium_task(*args, **kwargs) -> TaskResult:
+    if not args and not kwargs:
+        task = create_medium_task()
+        task.reset()
+        return TaskGrader.grade_medium(task.env, task.env.state(), use_llm=False)
     env, final_obs = _resolve_task_context(*args, **kwargs)
     return TaskGrader.grade_medium(env, final_obs, use_llm=False)
 
 
 def grade_hard_task(*args, **kwargs) -> TaskResult:
+    if not args and not kwargs:
+        task = create_hard_task()
+        task.reset()
+        return TaskGrader.grade_hard(task.env, task.env.state(), use_llm=False)
     env, final_obs = _resolve_task_context(*args, **kwargs)
     return TaskGrader.grade_hard(env, final_obs, use_llm=False)
+
+
+def grade_easy_score(*args, **kwargs) -> float:
+    return float(grade_easy_task(*args, **kwargs).score)
+
+
+def grade_medium_score(*args, **kwargs) -> float:
+    return float(grade_medium_task(*args, **kwargs).score)
+
+
+def grade_hard_score(*args, **kwargs) -> float:
+    return float(grade_hard_task(*args, **kwargs).score)
 
 
 __all__ = [
@@ -460,4 +484,7 @@ __all__ = [
     "grade_easy_task",
     "grade_medium_task",
     "grade_hard_task",
+    "grade_easy_score",
+    "grade_medium_score",
+    "grade_hard_score",
 ]
