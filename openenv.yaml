@@ -198,6 +198,7 @@ parameters:
 # Task specifications
 tasks:
   - name: "easy_charging"
+    entrypoint: ev_charging_env.tasks:create_easy_task
     difficulty: "easy"
     description: |
       Basic charging task with few vehicles and no dynamic constraints.
@@ -214,6 +215,7 @@ tasks:
       priority_agent: 0.72
   
   - name: "medium_charging"
+    entrypoint: ev_charging_env.tasks:create_medium_task
     difficulty: "medium"
     description: |
       Intermediate task with dynamic pricing and moderate constraints.
@@ -230,6 +232,7 @@ tasks:
       priority_agent: 0.75
   
   - name: "hard_charging"
+    entrypoint: ev_charging_env.tasks:create_hard_task
     difficulty: "hard"
     description: |
       Complex task with all constraints and stochastic arrivals.
