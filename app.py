@@ -1,33 +1,56 @@
-#!/usr/bin/env python3
-"""
-HuggingFace Spaces compatible app entry point for EV Charging Scheduler.
-Provides a Gradio interface for interactive testing and evaluation.
-"""
+from typing import Any, Dict
 
-import os
-import sys
+from fastapi import Body, FastAPI
 
 
-try:
-    from ui import demo
-    
-    # Export demo for HuggingFace Spaces
-    # HF Spaces will look for the 'demo' object and launch it automatically
-    if __name__ == "__main__":
-        # Launch locally if script is run directly
-        demo.launch(
-            show_error=True,
-            server_name="0.0.0.0",  # Required for HF Spaces
-            server_port=7860,        # Standard for HF Spaces
-            share=False
-        )
-        
-except ImportError as e:
-    print(f"Error: Failed to import UI: {e}")
-    print("Make sure gradio and ev_charging_env are properly installed.")
-    sys.exit(1)
-except Exception as e:
-    print(f"Error: Failed to launch UI: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
+app = FastAPI(title="OpenEnv Minimal API", version="1.0.0")
+
+
+def _initial_state() -> Dict[str, Any]:
+    return {
+        "step": 0,
+        "energy": 0.0,
+    }
+
+
+current_state: Dict[str, Any] = _initial_state()
+
+
+@app.post("/reset")
+def reset_environment() -> Dict[str, Any]:
+    global current_state
+    current_state = _initial_state()
+    return {"state": dict(current_state)}
+
+
+@app.post("/step")
+def step_environment(payload: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any]:
+    global current_state
+
+    current_state["step"] += 1
+
+    action = payload.get("action")
+    if isinstance(action, dict):
+        action_type = str(action.get("action_type", "noop"))
+    else:
+        action_type = str(payload.get("action_type", "noop"))
+    if action_type == "charge":
+        current_state["energy"] += 1.0
+        reward = 1.0
+    else:
+        reward = 0.0
+
+    done = current_state["step"] >= 5
+    observation = dict(current_state)
+
+    return {
+        "observation": observation,
+        "reward": float(reward),
+        "done": bool(done),
+        "info": {},
+    }
+
+
+@app.get("/state")
+def get_state() -> Dict[str, Any]:
+    return dict(current_state)

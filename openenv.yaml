@@ -197,86 +197,14 @@ parameters:
 
 # Task specifications
 tasks:
-  - id: "task_1"
-    name: "easy_charging"
-    grader_id: "grader_task_1"
-    entrypoint: ev_charging_env.tasks:create_easy_task
-    grader: ev_charging_env.tasks:grade_easy_score
-    grader_entrypoint: ev_charging_env.tasks:grade_easy_score
-    difficulty: "easy"
-    description: |
-      Basic charging task with few vehicles and no dynamic constraints.
-      Goal: Charge all vehicles efficiently.
-      Configuration:
-        - 5 vehicles
-        - 3 charging stations
-        - Static pricing (no volatility)
-        - Relaxed grid constraints (load < 2.0)
-        - 150 time steps
-    baseline_scores:
-      random_agent: 0.35
-      greedy_agent: 0.68
-      priority_agent: 0.72
-  
-  - id: "task_2"
-    name: "medium_charging"
-    grader_id: "grader_task_2"
-    entrypoint: ev_charging_env.tasks:create_medium_task
-    grader: ev_charging_env.tasks:grade_medium_score
-    grader_entrypoint: ev_charging_env.tasks:grade_medium_score
-    difficulty: "medium"
-    description: |
-      Intermediate task with dynamic pricing and moderate constraints.
-      Goal: Minimize cost while charging vehicles and respecting grid limits.
-      Configuration:
-        - 10 vehicles
-        - 4 charging stations
-        - Dynamic pricing with 0.3 volatility
-        - Grid constraint (load < 1.2)
-        - 180 time steps
-    baseline_scores:
-      random_agent: 0.42
-      greedy_agent: 0.65
-      priority_agent: 0.75
-  
-  - id: "task_3"
-    name: "hard_charging"
-    grader_id: "grader_task_3"
-    entrypoint: ev_charging_env.tasks:create_hard_task
-    grader: ev_charging_env.tasks:grade_hard_score
-    grader_entrypoint: ev_charging_env.tasks:grade_hard_score
-    difficulty: "hard"
-    description: |
-      Complex task with all constraints and stochastic arrivals.
-      Goal: Multi-objective optimization with urgent vehicles and tight deadlines.
-      Configuration:
-        - 15 vehicles with priority levels
-        - 5 charging stations
-        - Dynamic pricing with 0.5 volatility
-        - Strict grid constraint (load < 1.0)
-        - Tight deadlines and urgent priorities
-        - 200 time steps
-    baseline_scores:
-      random_agent: 0.28
-      greedy_agent: 0.55
-      priority_agent: 0.78
+  - name: easy_charging
+    entrypoint: ev_charging_env.simple_tasks:create_easy_task
 
-graders:
-  - id: "grader_task_1"
-    task_id: "task_1"
-    type: "programmatic"
-    entrypoint: ev_charging_env.tasks:grade_easy_score
-    score_range: [0.0, 1.0]
-  - id: "grader_task_2"
-    task_id: "task_2"
-    type: "programmatic"
-    entrypoint: ev_charging_env.tasks:grade_medium_score
-    score_range: [0.0, 1.0]
-  - id: "grader_task_3"
-    task_id: "task_3"
-    type: "programmatic"
-    entrypoint: ev_charging_env.tasks:grade_hard_score
-    score_range: [0.0, 1.0]
+  - name: medium_charging
+    entrypoint: ev_charging_env.simple_tasks:create_medium_task
+
+  - name: hard_charging
+    entrypoint: ev_charging_env.simple_tasks:create_hard_task
 
 # API interface
 api:

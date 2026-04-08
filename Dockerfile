@@ -39,5 +39,5 @@ USER appuser
 # For HuggingFace Spaces, expose port 7860
 EXPOSE 7860
 
-# Default command: launch API server for OpenEnv validation
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Default command: launch minimal API server for OpenEnv validation
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
