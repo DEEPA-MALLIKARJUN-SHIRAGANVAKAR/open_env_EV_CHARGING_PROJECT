@@ -33,7 +33,7 @@ def emit_block(tag: str, **fields: Any) -> None:
 
 def get_api_credentials() -> tuple[str | None, str | None]:
     """Return proxy-compatible API credentials from environment."""
-    api_key = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("API_KEY")
     api_base = os.getenv("API_BASE_URL")
     return api_key, api_base
 
@@ -44,16 +44,13 @@ class InferenceRunner:
     def __init__(self, model: str = None, seed: int = None):
         """Initialize with OpenAI client and environment variables support."""
         self.api_key, api_base = get_api_credentials()
-        if not self.api_key:
-            raise ValueError("API_KEY or OPENAI_API_KEY environment variable not set")
+        if not self.api_key or not api_base:
+            raise ValueError("API_KEY and API_BASE_URL environment variables must be set")
 
         # Model configuration with environment variable support
         self.model = model or os.getenv("MODEL_NAME", "gpt-4")
 
-        if api_base:
-            self.client = OpenAI(api_key=self.api_key, base_url=api_base)
-        else:
-            self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(api_key=self.api_key, base_url=api_base)
 
         # HF_TOKEN support (for HuggingFace models if needed)
         self.hf_token = os.getenv("HF_TOKEN")
@@ -533,21 +530,16 @@ def main():
     print("EV CHARGING SCHEDULER - OPENAI INFERENCE EVALUATION")
     print("="*70)
 
-    # Check for API key
+    # Check for proxy credentials
     api_key, api_base = get_api_credentials()
-    if not api_key:
-        print("\nERROR: API_KEY or OPENAI_API_KEY environment variable not set.")
-        print("Please set API_KEY and API_BASE_URL, or OPENAI_API_KEY for local runs.")
-        print("\nFalling back to baseline agent comparison...")
-
-        baseline_results = run_baseline_agents()
-        output_results(baseline_results, args.output_json)
-        return
+    if not api_key or not api_base:
+        print("\nERROR: API_KEY and API_BASE_URL environment variables are required.")
+        print("This runner must use the injected LiteLLM proxy and will not fall back.")
+        sys.exit(1)
 
     # Run with OpenAI API
     print(f"\nUsing OpenAI API with model: {args.model or os.getenv('MODEL_NAME', 'gpt-4')}")
-    if api_base:
-        print(f"Using API_BASE_URL: {api_base}")
+    print(f"Using API_BASE_URL: {api_base}")
     print(f"Reproducibility seed: {args.seed}")
     print(f"Max runtime per task: {args.max_runtime} minutes")
     print(f"Estimated total runtime: {args.max_runtime * 3} minutes\n")
