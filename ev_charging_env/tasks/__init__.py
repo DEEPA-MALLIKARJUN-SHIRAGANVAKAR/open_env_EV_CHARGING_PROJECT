@@ -404,3 +404,60 @@ def create_hard_task() -> Task:
         seed=44,
     )
     return Task("hard_charging", "hard", config)
+
+
+def _resolve_task_context(*args, **kwargs) -> tuple[EVChargingEnvironment, Observation]:
+    """Resolve grader inputs to (env, final_obs) for validator compatibility."""
+    if args:
+        first = args[0]
+        if isinstance(first, Task):
+            env = first.env
+            final_obs = env.state()
+            return env, final_obs
+        if isinstance(first, EVChargingEnvironment):
+            env = first
+            if len(args) > 1 and isinstance(args[1], Observation):
+                return env, args[1]
+            return env, env.state()
+
+    task = kwargs.get("task")
+    if isinstance(task, Task):
+        env = task.env
+        return env, env.state()
+
+    env = kwargs.get("env")
+    if isinstance(env, EVChargingEnvironment):
+        final_obs = kwargs.get("final_obs")
+        if isinstance(final_obs, Observation):
+            return env, final_obs
+        return env, env.state()
+
+    raise ValueError("Unsupported grader input; expected Task or EVChargingEnvironment")
+
+
+def grade_easy_task(*args, **kwargs) -> TaskResult:
+    env, final_obs = _resolve_task_context(*args, **kwargs)
+    return TaskGrader.grade_easy(env, final_obs, use_llm=False)
+
+
+def grade_medium_task(*args, **kwargs) -> TaskResult:
+    env, final_obs = _resolve_task_context(*args, **kwargs)
+    return TaskGrader.grade_medium(env, final_obs, use_llm=False)
+
+
+def grade_hard_task(*args, **kwargs) -> TaskResult:
+    env, final_obs = _resolve_task_context(*args, **kwargs)
+    return TaskGrader.grade_hard(env, final_obs, use_llm=False)
+
+
+__all__ = [
+    "Task",
+    "TaskGrader",
+    "TaskResult",
+    "create_easy_task",
+    "create_medium_task",
+    "create_hard_task",
+    "grade_easy_task",
+    "grade_medium_task",
+    "grade_hard_task",
+]
