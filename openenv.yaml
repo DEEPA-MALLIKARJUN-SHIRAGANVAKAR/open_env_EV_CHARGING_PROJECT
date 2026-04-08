@@ -197,7 +197,8 @@ parameters:
 
 # Task specifications
 tasks:
-  - name: "easy_charging"
+  - id: "task_1"
+    name: "easy_charging"
     entrypoint: ev_charging_env.tasks:create_easy_task
     grader: ev_charging_env.tasks:grade_easy_task
     grader_entrypoint: ev_charging_env.tasks:grade_easy_task
@@ -216,7 +217,8 @@ tasks:
       greedy_agent: 0.68
       priority_agent: 0.72
   
-  - name: "medium_charging"
+  - id: "task_2"
+    name: "medium_charging"
     entrypoint: ev_charging_env.tasks:create_medium_task
     grader: ev_charging_env.tasks:grade_medium_task
     grader_entrypoint: ev_charging_env.tasks:grade_medium_task
@@ -235,7 +237,8 @@ tasks:
       greedy_agent: 0.65
       priority_agent: 0.75
   
-  - name: "hard_charging"
+  - id: "task_3"
+    name: "hard_charging"
     entrypoint: ev_charging_env.tasks:create_hard_task
     grader: ev_charging_env.tasks:grade_hard_task
     grader_entrypoint: ev_charging_env.tasks:grade_hard_task
