@@ -1,18 +1,16 @@
-# Fix inference.py ModuleNotFoundError for Hackathon Submission #29 - COMPLETED
+# Submission #30 Failed: Not enough tasks with graders
+
+## Analysis
+3 graders exist in ev_charging_env/tasks/__init__.py but validator not detecting.
+
+## Fix Plan
+- Export grade_easy_task, grade_medium_task, grade_hard_task to ev_charging_env/__init__.py
+- Ensure create_easy_task etc use real env (already done post-pull)
 
 ## Steps:
-- [x] Step 1: Edit ev_charging_env/__init__.py - Fixed import from .tasks.simple_tasks
-- [x] Step 2: Edit ev_charging_env/tasks/__init__.py - Added re-export of task functions
-- [x] Step 3: Test by running `python inference.py` - Passed, printed [START]/[STEP]/[END]
-- [x] Step 4: Verified no import errors and correct output format
-- [x] Step 5: Updated TODO.md with completion
-- [x] Step 6: Ready for hackathon resubmission
+- [ ] Step 1: Edit ev_charging_env/__init__.py - Add grader exports
+- [ ] Step 2: Test python inference.py (real task)
+- [ ] Step 3: git add/commit/push origin main + hf main
+- [ ] Step 4: Resubmit #31
 
-**Test Output:**
-[START] task=easy_charging
-[STEP] step=1 action=charge reward=0.239
-... (5 steps)
-[END] task=easy_charging score=0.06605 steps=5
-
-Now resubmit Submission #29 to pass Phase 2.
-
+Previous fix complete.
