@@ -2,18 +2,14 @@ name: "EV Charging Scheduler"
 version: "1.0.0"
 author: "AI Engineering Team"
 
-# Problem description
 description: |
   A production-level OpenEnv environment for optimizing electric vehicle charging
   across multiple charging stations. The agent must balance multiple objectives:
   - Minimize total energy cost
   - Avoid grid overload
-  - Maximize charging efficiency  
+  - Maximize charging efficiency
   - Prioritize urgent vehicles
   - Meet vehicle charging deadlines
-  
-  This environment simulates a smart grid scenario with dynamic electricity pricing,
-  limited charging infrastructure, and time-constrained vehicle arrivals.
 
 category: "optimization"
 domain: "smart-grid"
@@ -22,11 +18,9 @@ difficulty_levels:
   - medium
   - hard
 
-# OpenEnv compliance
 openenv_spec_version: "1.0"
 environment_type: "simulator"
 
-# Action space
 action_space:
   type: "discrete"
   description: "Assign vehicles to charging stations or delay charging"
@@ -34,28 +28,22 @@ action_space:
     action_type:
       type: "string"
       enum: ["assign", "delay"]
-      description: "Action type: assign vehicle to station or delay"
     vehicle_id:
       type: "integer"
       ge: 0
-      description: "Target vehicle identifier"
     station_id:
       type: "integer"
       ge: 0
-      description: "Target charging station (required for assign, optional for delay)"
     power_level:
       type: "float"
       ge: 0.0
       le: 1.0
       default: 1.0
-      description: "Normalized charging power level (0-1)"
     duration:
       type: "integer"
       ge: 1
       default: 1
-      description: "Action duration in time steps"
 
-# Observation space
 observation_space:
   type: "dict"
   description: "Full system state including vehicles, stations, and grid"
@@ -63,7 +51,6 @@ observation_space:
     time_step:
       type: "integer"
       ge: 0
-      description: "Current simulation time step"
     vehicles:
       type: "array"
       items:
@@ -71,32 +58,18 @@ observation_space:
         properties:
           id:
             type: "integer"
-            description: "Vehicle ID"
           battery_level:
             type: "float"
-            ge: 0.0
-            le: 1.0
-            description: "Current battery charge (0-1)"
           required_charge:
             type: "float"
-            ge: 0.0
-            le: 1.0
-            description: "Amount of charge needed (0-1)"
           deadline:
             type: "integer"
-            ge: 0
-            description: "Time step deadline"
           priority:
             type: "string"
-            enum: ["normal", "urgent"]
-            description: "Vehicle priority"
           arrival_time:
             type: "integer"
-            ge: 0
-            description: "Time when vehicle arrived"
           fully_charged:
             type: "boolean"
-            description: "Whether fully charged"
     stations:
       type: "array"
       items:
@@ -117,96 +90,67 @@ observation_space:
       properties:
         current_load:
           type: "float"
-          ge: 0.0
-          le: 1.0
-          description: "Normalized grid load"
         max_load:
           type: "float"
-          description: "Maximum allowed load"
         electricity_price:
           type: "float"
-          ge: 0.0
-          description: "Current price per kWh"
         time_step:
           type: "integer"
-          description: "Current time step"
     total_reward:
       type: "float"
-      description: "Cumulative episode reward"
 
-# Reward specification
 reward_space:
   type: "float"
   range: [-1.0, 1.0]
-  description: |
-    Normalized reward combining multiple objectives:
-    - Completion bonus: reward for charging vehicles (+0.3)
-    - Deadline bonus: reward for meeting deadlines (+0.2 to -0.2)
-    - Priority bonus: reward for urgent vehicle charging (+0.2)
-    - Grid penalty: penalty for exceeding grid load (-0.3)
-    - Cost penalty: penalty for high energy costs (-0.3)
-    - Efficiency bonus: reward for energy efficiency (+0.1)
-    - Idle penalty: penalty for underutilized stations (-0.2)
+  description: "Normalized reward combining charging efficiency, cost, and deadline adherence"
 
-# Environment parameters
 parameters:
   num_vehicles:
     type: "integer"
     default: 10
     min: 1
-    description: "Number of vehicles in the system"
   num_stations:
     type: "integer"
     default: 5
     min: 1
-    description: "Number of charging stations"
   max_steps:
     type: "integer"
     default: 200
     min: 10
-    description: "Maximum steps per episode"
   slots_per_station:
     type: "integer"
     default: 3
     min: 1
-    description: "Charging slots per station"
   max_power_per_station:
     type: "float"
     default: 150.0
-    gt: 0
-    description: "Maximum power capacity per station (kW)"
   max_grid_load:
     type: "float"
     default: 1.0
-    gt: 0
-    description: "Maximum acceptable grid load (normalized)"
   base_electricity_price:
     type: "float"
     default: 0.15
-    gt: 0
-    description: "Base electricity price ($/kWh)"
   price_volatility:
     type: "float"
     default: 0.3
-    ge: 0
-    description: "Price volatility multiplier"
   seed:
     type: "integer"
     nullable: true
-    description: "Random seed for reproducibility"
 
-# Task specifications
+# ── TASKS WITH GRADERS (required for Phase 2) ──
 tasks:
   - name: easy_charging
-    entrypoint: ev_charging_env.simple_tasks:create_easy_task
+    entrypoint: ev_charging_env.tasks.simple_tasks:create_easy_task
+    grader: ev_charging_env.tasks.simple_tasks:grade_easy
 
   - name: medium_charging
-    entrypoint: ev_charging_env.simple_tasks:create_medium_task
+    entrypoint: ev_charging_env.tasks.simple_tasks:create_medium_task
+    grader: ev_charging_env.tasks.simple_tasks:grade_medium
 
   - name: hard_charging
-    entrypoint: ev_charging_env.simple_tasks:create_hard_task
+    entrypoint: ev_charging_env.tasks.simple_tasks:create_hard_task
+    grader: ev_charging_env.tasks.simple_tasks:grade_hard
 
-# API interface
 api:
   step:
     description: "Execute one environment step with an action"
@@ -221,32 +165,20 @@ api:
     input: "none"
     output: "current observation"
 
-# Computational requirements
 requirements:
   cpu: "2 vCPU minimum"
   memory: "8GB RAM minimum"
-  gpu: "optional (CPU-compatible)"
+  gpu: "optional"
   python_version: ">=3.8"
   dependencies:
     - pydantic
     - numpy
-    - torch (optional, for RL training)
 
-# Performance benchmarks
-benchmarks:
-  easy_task_runtime: "<5 minutes"
-  medium_task_runtime: "<10 minutes"
-  hard_task_runtime: "<15 minutes"
-  all_tasks_runtime: "<20 minutes"
-
-# Determinism & reproducibility
 determinism:
   enabled: true
-  description: "All episodes are reproducible with fixed seed"
   seed_support: true
   reset_resets_seed: true
 
-# Compliance
 compliance:
   openenv: true
   gym_compatible: true

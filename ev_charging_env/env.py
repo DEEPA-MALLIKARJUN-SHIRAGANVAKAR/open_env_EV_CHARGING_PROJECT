@@ -20,6 +20,12 @@ from .models import (
     PriorityLevel,
 )
 
+# FIXED - GradeResult for validator
+class GradeResult:
+    def __init__(self, score: float):
+        self.score = max(0.0, min(1.0, score))
+
+
 
 class EVChargingEnvironment:
     """
@@ -391,8 +397,16 @@ class EVChargingEnvironment:
         
         return breakdown
 
+    def grade(self):
+        # FIXED - Mandatory grade method for Phase 2 validator
+        total = max(1, len(self.vehicles))
+        completed = sum(1 for v in self.vehicles.values() if v.fully_charged)
+        score = completed / total
+        return GradeResult(score)
+
     def render(self) -> str:
         """Render current environment state as string."""
+
         obs = self.state()
         lines = [
             f"=== EV Charging Scheduler (Step {self.time_step}/{self.config.max_steps}) ===",
